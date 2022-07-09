@@ -335,23 +335,7 @@ def MouseMoveB(self):
     SetCursor(cr_hand=True)
     
 
-
-def moveC(self):
-    # self.color = (150,150,150)
-    self.color_font = clred
-    SetCursor(cr_hand=True)
-
-
-
-def clickC(self,mouse_button):
-    global TEXTO_KEYBOARD
-
-    if (TEXTO_KEYBOARD == None):
-        TEXTO_KEYBOARD = ""
-    else:
-        TEXTO_KEYBOARD = None
-
-
+ 
     
 
 
@@ -366,6 +350,8 @@ def clickC(self,mouse_button):
 MapaConst = {}
 
 TEXTO_KEYBOARD = ''
+
+
 
 def start():
     global MapaConst, SalvarImagem
@@ -391,6 +377,7 @@ def start():
         'colunas': 40, # quantidade de letras nas colunas
         'linhas' : 25, # quantidade de letras nas linhas
     }
+
     # calcula o tamanho dos botoes de cada letra na matriz
     MapaConst['btt_width'] =(width - (2*MapaConst['borda'])) // MapaConst['colunas']
     MapaConst['btt_height'] = (heigth - MapaConst['borda_button'] - MapaConst['borda_top']) // MapaConst['linhas']
@@ -457,15 +444,10 @@ def start():
     #                                                                                         #
     ###########################################################################################
 
-    t0 = datetime.now()
-    desenha_cursor = True
+ 
 
     while True:
-
-        """if (datetime.now() - t0) > 500:
-            t0 = datetime.now()
-            desenha_cursor = not desenha_cursor
-        """
+ 
         screen.fill(clbtnface) # cor nostalgica do Delphi n poderia faltar!
 
         # Buscar os eventos do usuario

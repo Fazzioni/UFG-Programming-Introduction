@@ -1,3 +1,5 @@
-a = [1,2,3,4]
+a = list('abcdefghijklmnopqrstuvwxyzçABCDEFGHIJKLMNOPQRSTUVWXYZÇ')
 
-print(a[-1])
+
+if 'a' in a:
+    print(a)

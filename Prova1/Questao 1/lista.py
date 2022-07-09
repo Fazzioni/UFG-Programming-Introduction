@@ -9,5 +9,4 @@ MapaConst = {
         'btt_width':20
     }
 
-x = 10
-print(int(MapaConst['borda']) + (MapaConst['btt_width'])*x)
+print(MapaConst.get('bordaa'))

@@ -121,7 +121,7 @@ def SetCursor(cr_arrow = False, cr_hand = False):
 
 
 def FormKeyUP( evento ):    
-    UseSpace = True
+    UseSpace = False
     """
         Solucionar a escrita  poderia trazer bastante linhas de códigos, 
         pq uma abordagem comum é buscar o elemento com foco e modificar o texto.
@@ -179,7 +179,9 @@ def MouseMoveFundo( ):
     SetCursor(cr_arrow=True)
     Objetos['btt_insert'].color = clwhite
     Objetos['btt_screen_shot'].color = clwhite    
-
+    Objetos['btt_show_words'].color = clwhite    
+    
+    
 
 
 # funcao on Click do botao de salvar a imagem
@@ -207,14 +209,21 @@ def AfterKeyUP():
 
 
 
+# "Alguns paragrafos do lorem ipsum"
 Lorem_ipsum = "Sed ut perspiciatis, unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt, explicabo. Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum, quia dolor sit amet consectetur adipisci velit, sed quia non numquam  eius modi tempora inci dunt, ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur Quis autem vel eum iure reprehenderit, qui in ea voluptate velit esse, quam nihil molestiae consequatur, vel illum, qui dolorem eum fugiat, quo voluptas nulla pariatur  At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil impedit, quo minus id, quod maxime placeat, facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. But I must explain to you how all this mistaken idea of reprobating pleasure and extolling pain arose. To do so, I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness. No one rejects, dislikes or avoids pleasure itself, because it is pleasure, but because those who do not know how to pursue pleasure rationally encounter consequences that are extremely painful. Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but occasionally circumstances occur in which toil and pain can procure him some great pleasure. To take a trivial example, which of us ever undertakes laborious physical exercise, except to obtain some advantage from it But who has any right to find fault with a man who chooses to enjoy a pleasure that has no annoying consequences, or one who avoids a pain that produces no resultant pleasure  On the other hand, we denounce with righteous indignation and dislike men who are so beguiled and demoralized by the charms of pleasure of the moment, so blinded by desire, that they cannot foresee the pain and trouble that are bound to ensue; and equal blame belongs to those who fail in their duty through weakness of will, which is the same as saying through shrinking from toil and pain. These cases are perfectly simple and easy to distinguish. In a free hour, when our power of choice is untrammeled and when nothing prevents our being able to do what we like best, every pleasure is to be welcomed and every pain avoided. But in certain circumstances and owing to the claims of duty or the obligations of business it will frequently occur that pleasures have to be repudiated and annoyances accepted. The wise man therefore always holds in these matters to this principle of selection: he rejects pleasures to secure other greater pleasures, or else he endures pains to avoid worse pains."
+# tratamento dos dados
 Lorem_ipsum = Lorem_ipsum.replace(" ", "")
 Lorem_ipsum = Lorem_ipsum.replace(",", "")
 Lorem_ipsum = Lorem_ipsum.replace(".", "")
 Lorem_ipsum = Lorem_ipsum.upper()
 
+# inicia numa posicao aleatoria
 Lorem_Start = random.randrange(len(Lorem_ipsum))
 def GetLetra():
+    """
+        Funcao para gerar aleatoria uma letra
+        cada letra da grade chama essa funcao
+    """
     global Lorem_Start, Lorem_ipsum
     Lorem_Start+=1
     if Lorem_Start >= len(Lorem_ipsum):
@@ -222,9 +231,104 @@ def GetLetra():
     return Lorem_ipsum[Lorem_Start]
 
 
-def ClickButtonB(self,mouse_button):
-    print("VC CLICOU NO BOTAO B,  button:", mouse_button)
+def Posicao_Valida(x,y, letra):
+    """
+        Verifica se a posicao X,Y pode ser usada para colocar uma letra
+    """
+    item = Objetos.get(str(x)+'.'+str(y))
+    if item == None:
+        return False
+    else:
+        if item.usado:
+            if item.caption != letra:
+                return False
+        return True
+
+def PreenchePosicao(x,y, letra):
+    """
+        Marca o objeto x,y com a letra!
+    """
+    item = Objetos.get(str(x)+'.'+str(y))
+    if item == None:
+        return False
     
+    item.usado = True
+    item.caption = letra
+
+def Muda_Cor(x,y, cor):
+    """
+        Muda a cor de uma letra
+    """
+    item = Objetos.get(str(x)+'.'+str(y))
+    if item == None:
+        return False
+    if item.usado:
+        item.color = cor
+
+def ClickButtonB(self,mouse_button):
+    global TEXTO_KEYBOARD
+
+    #Vamos procurar todos os lugares possiveis para adicionar a palavra
+    # depois fazemos um choice
+    # É força bruta? é! kkkkk qualquer coisa usamos a DGX para processar ahsduahsudas
+    # A complexidade disso ficaria: 2(n)².(lg n).c, onde n é o numero de elementos da matriz, c é o tamanho da palavra
+    # se são 25 * 40 = 1000 elementos, 1000² = 10^6 *c= 10^8. Ainda ta safe!
+    if len(TEXTO_KEYBOARD) == 0:
+        return 
+
+    Posicoes_possiveis = [] # guardar todas as posicoes de insercao
+
+    for xx in range(MapaConst['colunas']): 
+        for yy in range(MapaConst['linhas']):
+            pos_horizontal = True
+            pos_vertical = True
+            for c,letra in enumerate(TEXTO_KEYBOARD):
+                if not Posicao_Valida(xx+c,yy,letra): # Ha uma posicao já utilizada aqui
+                    pos_horizontal = False
+                if not Posicao_Valida(xx,yy+c,letra): # Ha uma posicao já utilizada aqui
+                    pos_vertical = False
+
+            if pos_horizontal:
+                Posicoes_possiveis.append( [xx,yy,0])
+            if pos_vertical:
+                Posicoes_possiveis.append( [xx,yy,1])
+    
+    if len(Posicoes_possiveis) > 0:
+        p = random.choice(Posicoes_possiveis)
+ 
+        for c,letra in enumerate(TEXTO_KEYBOARD):
+            
+            if p[2]: # coloca na posicao vertical
+                PreenchePosicao(p[0],p[1]+c, TEXTO_KEYBOARD[c])
+            else: # coloca na posicao horizontal
+                PreenchePosicao(p[0]+c,p[1], TEXTO_KEYBOARD[c])
+
+        TEXTO_KEYBOARD = ""
+        AfterKeyUP() # atualiza
+    else:
+        print("Não há posições possiveis para inserir")
+
+
+Mostrar_palavras = False
+def btt_show_words_Click(self,mouse_button):
+    """
+        MUDA A COR DAS PALAVRAS ADICIONADAS
+    """
+    global Mostrar_palavras,MapaConst
+    Mostrar_palavras = not Mostrar_palavras
+
+    set_cor = clwhite
+    if Mostrar_palavras:
+         set_cor = clred
+
+    #percorre todos os objetos
+    for xx in range(MapaConst['colunas']): 
+        for yy in range(MapaConst['linhas']):
+            Muda_Cor(xx,yy,set_cor)
+
+
+
+
 
 def MouseMoveB(self):
     self.color = clred
@@ -248,7 +352,7 @@ def clickC(self,mouse_button):
         TEXTO_KEYBOARD = None
 
 
-
+    
 
 
 
@@ -315,6 +419,17 @@ def start():
     Btt_screen_shot.OnClick =  Btt_Screen_shot_Click # dispara esse evento quando clicar no botao
     Btt_screen_shot.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
     
+
+
+    # Botao para Mostrar as Palavras Inseridas
+    btt_show_words = TButton('btt_show_words')
+    btt_show_words.SetRect( width - MapaConst['borda'] - 200, heigth - MapaConst['borda_button']+10, 200, 30)
+    btt_show_words.caption = 'Mostrar Palavras'
+    btt_show_words.OnClick =  btt_show_words_Click # dispara esse evento quando clicar no botao
+    btt_show_words.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    
+
+
     # label, texto informativo
     L = Tlabel('label',"Digite a palavra:",(0,0 ))
     L.color_font = clblack
@@ -332,7 +447,7 @@ def start():
                 btt_new_letra.x = x
                 btt_new_letra.y = y
                 btt_new_letra.OnClick = OnClickLetra
-
+                btt_new_letra.usado = False
 
 
 

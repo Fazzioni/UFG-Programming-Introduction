@@ -15,7 +15,6 @@ TEXTO_KEYBOARD = None
 
 
 
-
 """ ###########################################################################################
     #                                                                                         #
     #                                 ORIENTAÇÃO  DE  OBJETOS                                 #
@@ -24,6 +23,7 @@ TEXTO_KEYBOARD = None
 
 class Tcontrol():
     global Objetos
+    global state
     """ 
         Classe responsável por controlar as opções basicas do Objeto 
     """
@@ -35,7 +35,10 @@ class Tcontrol():
         self.color = clwhite
         self.color_font = clblack
         self.nome = nome
+        self.state = 0
         Objetos[nome] = self
+        
+
 
 
 
@@ -177,22 +180,13 @@ def MouseMoveFundo( ):
         **se nao encontrar nenhum componente
     """
     SetCursor(cr_arrow=True)
-    Objetos['btt_insert'].color = clwhite
-    Objetos['btt_screen_shot'].color = clwhite    
-    Objetos['btt_show_words'].color = clwhite    
+    Objetos['btt_play'].color = clwhite
+
+    #Objetos['btt_Sufle'].color = clwhite    
     
+    # Objetos['btt_show_words'].color = clwhite    
     
-
-
-# funcao on Click do botao de salvar a imagem
-SalvarImagem = False
-def Btt_Screen_shot_Click(self,mouse_button):
-    global SalvarImagem
-    SalvarImagem = True
-def ButtonMouseMove(self):
-    self.color = clred
-    SetCursor(cr_hand=True)
-
+ 
 
 
 # ao clicar em uma letra da matriz
@@ -201,35 +195,10 @@ def OnClickLetra(self,mouse_button):
 
 # Evento apos soltar uma tecla
 def AfterKeyUP():
-    global TEXTO_KEYBOARD
-    # Atualiza o botao para receber o conteudo digitado pelo usuario
-    Objetos['Btt_Read'].caption = TEXTO_KEYBOARD   
-    
-
-
-
-
-
-# "Alguns paragrafos do lorem ipsum"
-Lorem_ipsum = "Sed ut perspiciatis, unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt, explicabo. Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum, quia dolor sit amet consectetur adipisci velit, sed quia non numquam  eius modi tempora inci dunt, ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur Quis autem vel eum iure reprehenderit, qui in ea voluptate velit esse, quam nihil molestiae consequatur, vel illum, qui dolorem eum fugiat, quo voluptas nulla pariatur  At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil impedit, quo minus id, quod maxime placeat, facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. But I must explain to you how all this mistaken idea of reprobating pleasure and extolling pain arose. To do so, I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness. No one rejects, dislikes or avoids pleasure itself, because it is pleasure, but because those who do not know how to pursue pleasure rationally encounter consequences that are extremely painful. Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but occasionally circumstances occur in which toil and pain can procure him some great pleasure. To take a trivial example, which of us ever undertakes laborious physical exercise, except to obtain some advantage from it But who has any right to find fault with a man who chooses to enjoy a pleasure that has no annoying consequences, or one who avoids a pain that produces no resultant pleasure  On the other hand, we denounce with righteous indignation and dislike men who are so beguiled and demoralized by the charms of pleasure of the moment, so blinded by desire, that they cannot foresee the pain and trouble that are bound to ensue; and equal blame belongs to those who fail in their duty through weakness of will, which is the same as saying through shrinking from toil and pain. These cases are perfectly simple and easy to distinguish. In a free hour, when our power of choice is untrammeled and when nothing prevents our being able to do what we like best, every pleasure is to be welcomed and every pain avoided. But in certain circumstances and owing to the claims of duty or the obligations of business it will frequently occur that pleasures have to be repudiated and annoyances accepted. The wise man therefore always holds in these matters to this principle of selection: he rejects pleasures to secure other greater pleasures, or else he endures pains to avoid worse pains."
-# tratamento dos dados
-Lorem_ipsum = Lorem_ipsum.replace(" ", "")
-Lorem_ipsum = Lorem_ipsum.replace(",", "")
-Lorem_ipsum = Lorem_ipsum.replace(".", "")
-Lorem_ipsum = Lorem_ipsum.upper()
-
-# inicia numa posicao aleatoria
-Lorem_Start = random.randrange(len(Lorem_ipsum))
-def GetLetra():
-    """
-        Funcao para gerar aleatoria uma letra
-        cada letra da grade chama essa funcao
-    """
-    global Lorem_Start, Lorem_ipsum
-    Lorem_Start+=1
-    if Lorem_Start >= len(Lorem_ipsum):
-        Lorem_Start = 0
-    return Lorem_ipsum[Lorem_Start]
+    pass
+   #global TEXTO_KEYBOARD
+   # Objetos['Btt_Read'].caption = TEXTO_KEYBOARD   
+   # Objetos['label'].caption = TEXTO_KEYBOARD
 
 
 def Posicao_Valida(x,y, letra):
@@ -251,10 +220,10 @@ def PreenchePosicao(x,y, letra):
     """
     item = Objetos.get(str(x)+'.'+str(y))
     if item == None:
-        return False
-    
+        return False    
     item.usado = True
     item.caption = letra
+
 
 def Muda_Cor(x,y, cor):
     """
@@ -276,16 +245,13 @@ def ClickButtonB(self,mouse_button):
     # se são 25 * 40 = 1000 elementos, 1000² = 10^6 *c= 10^8. Ainda ta safe!
     if len(TEXTO_KEYBOARD) == 0:
         return 
-    
+
     Posicoes_possiveis = [] # guardar todas as posicoes de insercao
 
     for xx in range(MapaConst['colunas']): 
         for yy in range(MapaConst['linhas']):
             pos_horizontal = True
             pos_vertical = True
-
-                                                                                                    ## DA PARA VERIFICAR CABE NAS DIAGONAIS TAMBEM
-
             for c,letra in enumerate(TEXTO_KEYBOARD):
                 if not Posicao_Valida(xx+c,yy,letra): # Ha uma posicao já utilizada aqui
                     pos_horizontal = False
@@ -332,33 +298,67 @@ def btt_show_words_Click(self,mouse_button):
 
 
 
+ 
 
 
-def MouseMoveB(self): 
-    # Ao passar o mouse no botao (self), ele recebe a cor clred
+def ButtonMouseMove(self):
+    global state
     self.color = clred
-    SetCursor(cr_hand=True)
-    
+    SetCursor(cr_hand=True) 
 
  
-    
-
-
-
-
 
 
     
-       
+
+def btt_play_click(self,mouse_button):
+    global state
+    state = 2
+
+
+def LimpaNavio():
+    """
+        Funcao para limpar todos os navios
+
+    """
+    pass
+
+    
+def SelecionaRegioes():
+    """
+        Essa funcao retorna os possiveis quadrados para os jogadores escolherem
+    """
+    "-> cada item sorteado pode trazer 4 lugares"
+    # se os valores totais sao multiplos de 4
+    # de quantas formas podemos sortear 8 quadrantes de 16?
+    
+
+    
+
+
 
 
 MapaConst = {}
 
 TEXTO_KEYBOARD = ''
 
+state = 1 # cada componente tem um estado, se o estado for igual, então desenha
 
 
 def start():
+    global state
+    ## VAMOS CRIAR UM BATALHA NAVAL MAIS DIVERTIDO? ##
+    # -> Os 2 jogadores vao usar o mesmo tabuleiro
+    # -> Já que tem liberdade poética, vamos criar a minha versão!
+    # 
+    # -> Único problema... como fazer para os dois jogadores nao colocar navios no mesmo lugar?
+    # -> O jogador so vai poder colocar um navio na regiao que o computador escolher
+    # -> Como definir quantas regioes sao necessarias?
+    # -> Depois nos pensamos kkkk
+    # -> vamos codar um pouco
+    #
+    #
+    #####################################################
     global MapaConst, SalvarImagem
 
     pg.init()
@@ -370,29 +370,28 @@ def start():
     font = pg.font.SysFont('Times New Roman',16)
     
  
-
     # Vamos começar a criar os botoes:
-
     # armazena as configurações da matriz de letras
     MapaConst = {
         'borda': 20,
         'borda_top': 80,
         'borda_button': 50,
 
-        'colunas': 40, # quantidade de letras nas colunas
-        'linhas' : 25, # quantidade de letras nas linhas
+        'colunas': 20, # quantidade de letras nas colunas
+        'linhas' : 20, # quantidade de letras nas linhas
     }
+
 
     # calcula o tamanho dos botoes de cada letra na matriz
     MapaConst['btt_width'] =(width - (2*MapaConst['borda'])) // MapaConst['colunas']
     MapaConst['btt_height'] = (heigth - MapaConst['borda_button'] - MapaConst['borda_top']) // MapaConst['linhas']
 
-
+    """
     Btt_Insert = TButton('btt_insert')
     Btt_Insert.SetRect( width - MapaConst['borda'] - 200, 20, 200, 40)
     Btt_Insert.caption = "Inserir Palavra"
     # eventos do botao
-    Btt_Insert.OnClick =  ClickButtonB
+    #Btt_Insert.OnClick =  ClickButtonB
     Btt_Insert.OnMouseMove =  MouseMoveB
 
     #Botao para pegar a palavra digitada pelo usuario
@@ -408,24 +407,25 @@ def start():
     Btt_screen_shot = TButton('btt_screen_shot')
     Btt_screen_shot.SetRect( MapaConst['borda'], heigth - MapaConst['borda_button']+10, 200, 30)
     Btt_screen_shot.caption = 'Salvar Imagem'
-    Btt_screen_shot.OnClick =  Btt_Screen_shot_Click # dispara esse evento quando clicar no botao
+    #Btt_screen_shot.OnClick =  Btt_Screen_shot_Click # dispara esse evento quando clicar no botao
     Btt_screen_shot.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
     
-
+    """
 
     # Botao para Mostrar as Palavras Inseridas
-    btt_show_words = TButton('btt_show_words')
-    btt_show_words.SetRect( width - MapaConst['borda'] - 200, heigth - MapaConst['borda_button']+10, 200, 30)
-    btt_show_words.caption = 'Mostrar Palavras'
-    btt_show_words.OnClick =  btt_show_words_Click # dispara esse evento quando clicar no botao
-    btt_show_words.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
-    
+    btt_play = TButton('btt_play')
+    btt_play.SetRect( width - MapaConst['borda'] - 200, heigth - MapaConst['borda_button']+10, 200, 30)
+    btt_play.caption = 'Iniciar o jogo'
+    btt_play.OnClick =  btt_play_click # dispara esse evento quando clicar no botao
+    btt_play.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    btt_play.state = 1 # cada tela tem um state
 
 
+    """
     # label, texto informativo
     L = Tlabel('label',"Digite a palavra:",(0,0 ))
     L.color_font = clblack
-    
+    """
 
     for y in range(MapaConst['linhas']):
         for x in range(MapaConst['colunas']):
@@ -435,12 +435,12 @@ def start():
                                        MapaConst['borda_top'] + MapaConst['btt_height']*y,
                                        MapaConst['btt_width'], MapaConst['btt_height']
                                        )
-                btt_new_letra.caption = GetLetra()
+                btt_new_letra.caption = str(x)
                 btt_new_letra.x = x
                 btt_new_letra.y = y
                 btt_new_letra.OnClick = OnClickLetra
                 btt_new_letra.usado = False
-
+                btt_new_letra.state = 2
 
 
     ###########################################################################################
@@ -460,20 +460,17 @@ def start():
             if event.type == pg.QUIT: #Sai do jogo
                 exit()
 
-            elif event.type == pg.KEYUP:
-                FormKeyUP(event)
-
             # vamos realizar o click em todos os objetos
             elif event.type == pg.MOUSEBUTTONDOWN: 
                 for i in Objetos.values():
-                    if i.visible:
+                    if i.visible and state == i.state:
                         if i.Make_Click(event.pos, event.button):
                             break
 
             elif event.type == pg.MOUSEMOTION: # Ao passar no Mouse
                 backEvent = True
                 for i in Objetos.values():
-                    if i.visible:
+                    if i.visible and state == i.state:
                         if i.Make_Motion(event.pos):
                             backEvent = False
                             break
@@ -488,7 +485,7 @@ def start():
 
         #Desenha os objetos
         for obj in Objetos.values():
-            if (obj.visible): 
+            if (obj.visible) and state == obj.state:
 
                 # Desenha os botoes
                 if isinstance(obj,TButton):
@@ -510,18 +507,24 @@ def start():
 
         pg.display.flip()
 
-        # Salvar a Imagem?
-        if  SalvarImagem:
-            SalvarImagem = False
-            # definir o rect apenas da matriz
-            rect = pg.Rect(MapaConst['borda'], MapaConst['borda_top'], width - (MapaConst['borda']*2), heigth - MapaConst['borda_top'] - MapaConst['borda_button'])
-            sub = screen.subsurface(rect)
-            # salva
-            pg.image.save(sub, "board.jpg")
-            print("A imagem foi salva!")
 
 
-
-
+state = 2
 if __name__ == '__main__':
     start()
+
+
+
+
+
+# 4 navios
+# 8 areas
+# 8 * 4 = 32
+
+###################################
+### vamos criar a BOMBA NUCLEAR ###
+###################################
+# uma posicao pode ter um rastreador
+# uma posicao pode ter uma super bomba
+# ganhar mais um tiro
+

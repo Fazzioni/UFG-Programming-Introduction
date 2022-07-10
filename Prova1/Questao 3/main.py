@@ -12,6 +12,11 @@ clbtnface =  (236, 233, 216)
 Objetos = {}
 TEXTO_KEYBOARD = None
 
+# Quando o usuario vai colocar o navio no tabuleiro
+# essa variavel desenha o navio no mouse
+
+
+
 
 
 
@@ -20,6 +25,8 @@ TEXTO_KEYBOARD = None
     #                                 ORIENTAÇÃO  DE  OBJETOS                                 #
     #                                                                                         #
     ###########################################################################################"""
+
+
 
 class Tcontrol():
     global Objetos
@@ -38,9 +45,6 @@ class Tcontrol():
         self.state = 0
         Objetos[nome] = self
         
-
-
-
 
 class Trect():
     """
@@ -166,6 +170,34 @@ def FormKeyUP( evento ):
         print(evento)
 
 
+class TPlayer():
+    global MapaConst, Objetos
+
+    def __init__(self):
+        self.cor = clwhite
+        self.cor_navio = clblack
+        self.index = 0
+        self.pontos = 0
+        self.navios = [] # sequencia de elementos Tnavio
+
+    def SetStatus(self):
+        MapaConst['Form_color'] = self.cor
+        Objetos['label_player'].caption = 'Jogador: '+str(self.index)
+
+# Armazenar as informacoes de navio da Celula
+
+class TNavio():
+    def __init__(self, indice_player, _posicoes):        
+        self.Posicoes = _posicoes
+        self.player = GetPlayer(indice_player)
+        self.player.navios.append(self)
+        # marcar os elementos para fazerem referencia a esse navio
+        for el in self.Posicoes:
+            el.kind = self
+
+    def Show_navio(self):
+        for cell in self.Posicoes:
+            cell.color = self.player.cor_navio
 
 """ ###########################################################################################
     #                                                                                         #
@@ -174,26 +206,7 @@ def FormKeyUP( evento ):
     #                                                                                         #
     ###########################################################################################"""
 
-def MouseMoveFundo( ):
-    """
-        Ao mover o mouse pelo formulario
-        **se nao encontrar nenhum componente
-    """
-    SetCursor(cr_arrow=True)
-    Objetos['btt_play'].color = clwhite
-    Objetos['Next_player'].color = clwhite
-    
-
-    #Objetos['btt_Sufle'].color = clwhite    
-    
-    # Objetos['btt_show_words'].color = clwhite    
-    
  
-
-
-# ao clicar em uma letra da matriz
-def OnClickLetra(self,mouse_button):
-    print("Você clicou em um botao da matriz de letras (",self.x,'.',self.y,')')
 
 # Evento apos soltar uma tecla
 def AfterKeyUP():
@@ -203,127 +216,8 @@ def AfterKeyUP():
    # Objetos['label'].caption = TEXTO_KEYBOARD
 
 
-def Posicao_Valida(x,y, letra):
-    """
-        Verifica se a posicao X,Y pode ser usada para colocar uma letra
-    """
-    item = Objetos.get(str(x)+'.'+str(y))
-    if item == None:
-        return False
-    else:
-        if item.usado:
-            if item.caption != letra:
-                return False
-        return True
+   
 
-def PreenchePosicao(x,y, letra):
-    """
-        Marca o objeto x,y com a letra!
-    """
-    item = Objetos.get(str(x)+'.'+str(y))
-    if item == None:
-        return False    
-    item.usado = True
-    item.caption = letra
-
-
-def Muda_Cor(x,y, cor):
-    """
-        Muda a cor de uma letra
-    """
-    item = Objetos.get(str(x)+'.'+str(y))
-    if item == None:
-        return False
-    if item.usado:
-        item.color = cor
-
-def ClickButtonB(self,mouse_button):
-    global TEXTO_KEYBOARD
-
-    #Vamos procurar todos os lugares possiveis para adicionar a palavra
-    # depois fazemos um choice
-    # É força bruta? é! kkkkk qualquer coisa usamos a DGX para processar ahsduahsudas
-    # A complexidade disso ficaria: 2(n)².(lg n).c, onde n é o numero de elementos da matriz, c é o tamanho da palavra
-    # se são 25 * 40 = 1000 elementos, 1000² = 10^6 *c= 10^8. Ainda ta safe!
-    if len(TEXTO_KEYBOARD) == 0:
-        return 
-
-    Posicoes_possiveis = [] # guardar todas as posicoes de insercao
-
-    for xx in range(MapaConst['colunas']): 
-        for yy in range(MapaConst['linhas']):
-            pos_horizontal = True
-            pos_vertical = True
-            for c,letra in enumerate(TEXTO_KEYBOARD):
-                if not Posicao_Valida(xx+c,yy,letra): # Ha uma posicao já utilizada aqui
-                    pos_horizontal = False
-                if not Posicao_Valida(xx,yy+c,letra): # Ha uma posicao já utilizada aqui
-                    pos_vertical = False
-
-            if pos_horizontal:
-                Posicoes_possiveis.append( [xx,yy,0])
-            if pos_vertical:
-                Posicoes_possiveis.append( [xx,yy,1])
-    
-    if len(Posicoes_possiveis) > 0:
-        p = random.choice(Posicoes_possiveis)
- 
-        for c,letra in enumerate(TEXTO_KEYBOARD):
-            
-            if p[2]: # coloca na posicao vertical
-                PreenchePosicao(p[0],p[1]+c, TEXTO_KEYBOARD[c])
-            else: # coloca na posicao horizontal
-                PreenchePosicao(p[0]+c,p[1], TEXTO_KEYBOARD[c])
-
-        TEXTO_KEYBOARD = ""
-        AfterKeyUP() # atualiza
-    else:
-        print("Não há posições possiveis para inserir")
-
-
-Mostrar_palavras = False
-def btt_show_words_Click(self,mouse_button):
-    """
-        MUDA A COR DAS PALAVRAS ADICIONADAS
-    """
-    global Mostrar_palavras,MapaConst
-    Mostrar_palavras = not Mostrar_palavras
-
-    set_cor = clwhite
-    if Mostrar_palavras:
-         set_cor = clred
-
-    #percorre todos os objetos
-    for xx in range(MapaConst['colunas']): 
-        for yy in range(MapaConst['linhas']):
-            Muda_Cor(xx,yy,set_cor)
-
-
-
- 
-
-
-def ButtonMouseMove(self):
-    global state
-    self.color = clred
-    SetCursor(cr_hand=True) 
-
- 
-
-
-    
-
-def btt_play_click(self,mouse_button):
-    global state
-    state = 2
-
-
-def LimpaNavio():
-    """
-        Funcao para limpar todos os navios
-
-    """
-    pass
 
 def GetAllSpaces():
     global Objetos
@@ -337,7 +231,8 @@ def GetAllSpaces():
 
 def GetEspace(x,y):
     global Objetos
-    return Objetos[str(x)+'.'+str(y) ]
+    return Objetos.get(str(x)+'.'+str(y))
+
 
 def ChangeSpaceVisibility(player):
     """
@@ -381,33 +276,138 @@ def SelecionaRegioes():
                     GetEspace((lugar[0]*4)+x, (lugar[1]*4)+y).choice_player = player
                    
 
-            
+def ColocarNavio(self, dimensao, Horiontal):
+    """
+        FUNCAO PARA INSERIR UM NAVIO
+    """
+
+    # buscar as celulas que o navio impacta
+    elementos = []
+    for c in range(dimensao):
+        if Horiontal:
+            # se nao achar nessa posicao GetSpace retorna None
+            elementos.append( GetEspace(self.x + c, self.y)) 
+        else:
+            elementos.append( GetEspace(self.x, self.y+c))
+
+    # verificar se existe uma celula inválida
+    if None in elementos:
+        print("Lugar inválido para inserir um navio!")
+        return
+        
+    #vamos buscar o indice do jogador
+    player = GetPlayer()
+
+    # verificar se o usuario pode inserir nesses lugares
+    for el in elementos:
+        if el.choice_player != player.index:
+            print("Você não pode inserir nesse lugar!")
+            return    
+
+        # verificar se cada atributo Kind da celula está vazio ( se tiver um navio está referenciado aqui)
+        if el.kind != None:
+            print("Já existe um navio aqui!")
+            return    
+
+    Novo_Navio = TNavio(player.index,elementos)
+    #mostra para o usuario
+    Novo_Navio.Show_navio()
+
+    # vamos colocar ele em cada celula
+    # GetPlayer().
+    # print(elementos)
+
+
+
+
+
+
+def GetPlayer( indice = -1):
+    """
+        Funcao que retorna o jogador atual
+    """
+    global MapaConst
+    for jogador in MapaConst['jogadores']:
+        if indice == -1:
+            if jogador.index ==  MapaConst['choice_player']:
+                return jogador
+        else:
+            if jogador.index ==  indice:
+                return jogador
+
+
+    return None
+
+
+
+
+""" ###########################################################################################
+    #                                                                                         #
+    #                              FUNCOES ONCLICK DOS OBJETOS                                #
+    #                                                                                         #
+    ###########################################################################################"""
+
+
 def btt_next_player_click(self,mouse_button):
     """
         Funcao para o proximo jogador escolher as posicoes dos navios
     """ 
     global MapaConst
     MapaConst['choice_player'] += 1
+    MapaConst['navio_orientacao']=True
 
     if MapaConst['choice_player'] > MapaConst['Num_players']:
         print("VAMOS INICIAR O JOGO")
     else:
         ChangeSpaceVisibility(MapaConst['choice_player'])
+        GetPlayer().SetStatus() # atualiza o status do jogo para o proximo jogador
+
+    MapaConst['Desenha_Navio'] = -1
+
+    
+    
+
+def btt_muda_orientacao_click(self,mouse_button):
+    """
+       Funcao para mudar a orientação, quando o usuario vai colocar o navio no mapa
+    """
+    # orientacao vai ser salva na funcao mapa_const
+    global MapaConst
+    MapaConst['navio_orientacao'] = not MapaConst['navio_orientacao']
+    
 
 
+def btt_navio_click(self,mouse_button):
+    """
+        ao clicar no botao de adicionar navio
 
-def btt_navio_click():
+        guardar o estado de desenhar em uma variavel
+    """
+    global MapaConst
+    MapaConst['Desenha_Navio'] = self.dimensao # variavel que permite desenhar o navio no mouse
+
+    # MapaConst['navio_orientacao']
     pass
 
-MapaConst = {}
 
-TEXTO_KEYBOARD = ''
+def ClickOcean(self,mouse_button):
+    """
+        EVENTO AO CLICAR NUMA POSICAO DO OCEANO
+    """
+    global MapaConst
+    if (mouse_button == 1): # clicou com o botao esquerdo
+        
+        if MapaConst['Desenha_Navio'] > 0:
+            ColocarNavio(self, MapaConst['Desenha_Navio'], MapaConst['navio_orientacao'])
+            
 
-state = 1 # cada componente tem um estado, se o estado for igual, então desenha
+    elif (mouse_button == 2): # clicou com o botao direito
+        pass
 
-def OnBeforeStart():
+
+def btt_play_Click(self,mouse_button):
     global state, MapaConst
-    
+
     state = 2
     # seleciona os espacos possiveis para cada jogador
     SelecionaRegioes()
@@ -415,82 +415,57 @@ def OnBeforeStart():
     
     MapaConst['choice_player'] = 1 # jogador 1 começa escolhendo a regiao do mapa
     ChangeSpaceVisibility(MapaConst['choice_player'])
+    MapaConst['navio_orientacao'] = True
 
+    # Criar os jogadores
+    jogadores_qtd =  MapaConst['Num_players']
+    MapaConst['jogadores'] = []
+    for i in range(jogadores_qtd+1):
+        player = TPlayer() # cria um novo jogador
+
+        player.cor = (random.randrange(255),random.randrange(255),random.randrange(255))
+        player.cor_navio = (random.randrange(255),random.randrange(255),random.randrange(255))
+        
+        player.index = i+1
+
+        MapaConst['jogadores'].append (player) # adiciona o jogador num array
     
-def start():
+    GetPlayer().SetStatus()
+
+
+
+
+""" ###########################################################################################
+    #                                         ON MOVE                                         #
+    ###########################################################################################"""
+
+def ButtonMouseMove(self):
     global state
-    ## VAMOS CRIAR UM BATALHA NAVAL MAIS DIVERTIDO? ##
-    # -> Os 2 jogadores vao usar o mesmo tabuleiro
-    # -> Já que tem liberdade poética, vamos criar a minha versão!
-    # 
-    # -> Único problema... como fazer para os dois jogadores nao colocar navios no mesmo lugar?
-    # -> O jogador so vai poder colocar um navio na regiao que o computador escolher
-    # -> Como definir quantas regioes sao necessarias?
-    # -> Depois nos pensamos kkkk
-    # -> vamos codar um pouco
-    #
-    #
-    #####################################################
-    global MapaConst, SalvarImagem
+    self.color = clred
+    SetCursor(cr_hand=True) 
 
-    pg.init()
-    size  = width,heigth = 800,600
-    screen = pg.display.set_mode(size=size) 
-
-    # incializa a fonte   
-    #font = pg.font.SysFont('courier new',20) # essa é minha fonte preferida, mas eu n sou o cliente kkk
-    font = pg.font.SysFont('Times New Roman',16)
-    
- 
-    # Vamos começar a criar os botoes:
-    # armazena as configurações da matriz de letras
-    MapaConst = {
-        'borda': 20,
-        'borda_top': 80,
-        'borda_button': 50,
-
-        'colunas': 20, # quantidade de letras nas colunas
-        'linhas' : 20, # quantidade de letras nas linhas
-
-        'Num_players':2
-    }
-
-
-    # calcula o tamanho dos botoes de cada letra na matriz
-    MapaConst['btt_width'] =(width - (2*MapaConst['borda'])) // MapaConst['colunas']
-    MapaConst['btt_height'] = (heigth - MapaConst['borda_button'] - MapaConst['borda_top']) // MapaConst['linhas']
-
+def MouseMoveFundo( ):
     """
-    Btt_Insert = TButton('btt_insert')
-    Btt_Insert.SetRect( width - MapaConst['borda'] - 200, 20, 200, 40)
-    Btt_Insert.caption = "Inserir Palavra"
-    # eventos do botao
-    #Btt_Insert.OnClick =  ClickButtonB
-    Btt_Insert.OnMouseMove =  MouseMoveB
-
-    #Botao para pegar a palavra digitada pelo usuario
-    Btt_Read = TButton('Btt_Read')
-    Btt_Read.SetRect( MapaConst['borda'],20,200,40)
-    Btt_Read.width = (width - (MapaConst['borda'] * 2)) - Btt_Insert.width
-
-    Btt_Read.caption = ''
-    Btt_Read.color = cltransparent
-    Btt_Read.color_font = clred
-
-    # Botao para Salvar a matriz de letras
-    Btt_screen_shot = TButton('btt_screen_shot')
-    Btt_screen_shot.SetRect( MapaConst['borda'], heigth - MapaConst['borda_button']+10, 200, 30)
-    Btt_screen_shot.caption = 'Salvar Imagem'
-    #Btt_screen_shot.OnClick =  Btt_Screen_shot_Click # dispara esse evento quando clicar no botao
-    Btt_screen_shot.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
-    
+        Ao mover o mouse pelo formulario
+        **se nao encontrar nenhum componente
     """
+    SetCursor(cr_arrow=True)
+    Objetos['btt_play'].color = clwhite
+    Objetos['Next_player'].color = clwhite
+    Objetos['change_orientation'].color = clwhite
 
-    # Botao para Mostrar as Palavras Inseridas
+
+
+def CriaObjetos():
+    """
+        Funcao para criar todas os objeto estruturas
+    """
+    global MapaConst, width,heigth, size
+    # 1º botao para iniciar o jogo
     btt_play = TButton('btt_play')
     btt_play.SetRect( width - MapaConst['borda'] - 200, heigth - MapaConst['borda_button']+10, 200, 30)
     btt_play.caption = 'Iniciar o jogo'
-    btt_play.OnClick =  btt_play_click # dispara esse evento quando clicar no botao
+    btt_play.OnClick =  btt_play_Click # dispara esse evento quando clicar no botao
     btt_play.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
     btt_play.state = 1 # cada tela tem um state
 
@@ -509,26 +484,35 @@ def start():
         # posicionar da esquerda para direita
         nav_width = (width  - (MapaConst['borda']*2)) // len(navios)
 
-        btt_nav.SetRect( MapaConst['borda'] + (nav_width+2)*indice , 10, nav_width, 30)
-
+        btt_nav.SetRect( MapaConst['borda'] + (nav_width+2)*indice , MapaConst['borda_top']-40, nav_width, 30)
 
         btt_nav.dimensao = navio
         btt_nav.caption = 'Navio '+str(btt_nav.dimensao)
         btt_nav.OnClick =  btt_navio_click # dispara esse evento quando clicar no botao
         #btt_nav.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
         btt_nav.state = 2 # cada tela tem um state
+        btt_nav.ref = [] # variavel responsavel por armazenar as posicoes dos navios
+
+    
+
+    ## BOTAO PARA MUDAR A ORIENTAÇÃO DE COLOCAR O NAVIO
+    btt_muda_orientacao = TButton('change_orientation')
+    btt_muda_orientacao.SetRect( MapaConst['borda'], heigth - MapaConst['borda_button']+10, 200, 30)
+    btt_muda_orientacao.caption = 'Mudar a orientacao'
+    btt_muda_orientacao.OnClick =  btt_muda_orientacao_click # dispara esse evento quando clicar no botao
+    btt_muda_orientacao.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    btt_muda_orientacao.state = 2 # cada tela tem um state
 
 
+    # label jogador
+    label_player = Tlabel('label_player',"Jogador: ",(MapaConst['borda'], 10 ))
+    label_player.color_font = clblack
+    label_player.state = 2
 
 
-    #btt_nav.OnClick =  btt_navio_click
+ 
 
-    """
-    # label, texto informativo
-    L = Tlabel('label',"Digite a palavra:",(0,0 ))
-    L.color_font = clblack
-    """
-
+    ##CRIA OS SPACES  / OCEANO 
     for y in range(MapaConst['linhas']):
         for x in range(MapaConst['colunas']):
                 # cria um objeto Tbutton para cada space
@@ -540,11 +524,103 @@ def start():
                 btt_new_space.caption = str(x)
                 btt_new_space.x = x
                 btt_new_space.y = y
-                btt_new_space.OnClick = OnClickLetra
+                btt_new_space.OnClick = ClickOcean
                 btt_new_space.usado = False
                 btt_new_space.state = 2 # controla o desenho do componente, so quando o state global for igual
                 btt_new_space.choice_player = 0 # essa propriedade vai permitir que os jogadores coloquem o navio
-    print("Criou todos os spaces")                
+                btt_new_space.kind = None # tipo de elemento que tem na celula, pode ser um Tnavio ou ...
+
+
+def EventsAnswer():
+    """
+        Funcao para tratar os evento
+    """
+    global Objetos, MapaConst
+
+    # Buscar os eventos do usuario
+    for event in pg.event.get():
+        if event.type == pg.QUIT: #Sai do jogo
+            exit()
+
+        # vamos realizar o click em todos os objetos
+        elif event.type == pg.MOUSEBUTTONDOWN: 
+            for i in Objetos.values():
+                if i.visible and state == i.state:
+                    if i.Make_Click(event.pos, event.button):
+                        break
+
+        elif event.type == pg.MOUSEMOTION: # Ao passar no Mouse
+            backEvent = True
+            for i in Objetos.values():
+                if i.visible and state == i.state:
+                    if i.Make_Motion(event.pos):
+                        backEvent = False
+                        break
+            if backEvent:
+                MouseMoveFundo()
+
+        else:
+            # print(event)
+            pass
+
+
+""" ###########################################################################################
+    #                                                                                         #
+    #                                        START                                            #
+    #                                                                                         #
+    ###########################################################################################"""
+    
+
+def start():
+    global state, MapaConst, size, width,heigth
+    ## VAMOS CRIAR UM BATALHA NAVAL MAIS DIVERTIDO? ##
+    # -> Os 2 jogadores vao usar o mesmo tabuleiro
+    # -> Já que tem liberdade poética, vamos criar a minha versão!
+    # 
+    # -> Único problema... como fazer para os dois jogadores nao colocar navios no mesmo lugar?
+    # -> O jogador so vai poder colocar um navio na regiao que o computador escolher
+    # -> Como definir quantas regioes sao necessarias?
+    # -> Depois nos pensamos kkkk
+    # -> vamos codar um pouco
+    #
+    #
+    #####################################################
+
+    pg.init()
+    size  = width,heigth = 800,600
+    screen = pg.display.set_mode(size=size) 
+
+    # incializa a fonte   
+    #font = pg.font.SysFont('courier new',20) # essa é minha fonte preferida, mas eu n sou o cliente kkk
+    font = pg.font.SysFont('Times New Roman',16)
+    
+ 
+    # Vamos começar a criar os botoes:
+    # armazena as configurações da matriz de letras
+    MapaConst = {
+        'borda': 20,
+        'borda_top': 100,
+        'borda_button': 50,
+
+        'colunas': 20, # quantidade de letras nas colunas
+        'linhas' : 20, # quantidade de letras nas linhas
+
+        'Num_players':2,
+        'Desenha_Navio': -1, # tamanho do navio
+        'navio_orientacao': True, # horizontal ou vertical
+
+        'jogadores': [],  # armazenar todos os jogadores
+        'Form_color': clwhite
+    }
+
+
+    # calcula o tamanho dos botoes de cada letra na matriz
+    MapaConst['btt_width'] =(width - (2*MapaConst['borda'])) // MapaConst['colunas']
+    MapaConst['btt_height'] = (heigth - MapaConst['borda_button'] - MapaConst['borda_top']) // MapaConst['linhas']
+
+    # constroi os objetos
+    CriaObjetos()     
+    btt_play_Click(None,None)
 
 
     ###########################################################################################
@@ -552,39 +628,13 @@ def start():
     #                                 Interface Gráfica                                       #
     #                                                                                         #
     ###########################################################################################
-    OnBeforeStart()
-
-
-
+    
     while True:
- 
-        screen.fill(clbtnface) # cor nostalgica do Delphi n poderia faltar!
+        # preenche a tela
+        screen.fill(MapaConst['Form_color'])  
 
-        # Buscar os eventos do usuario
-        for event in pg.event.get():
-            if event.type == pg.QUIT: #Sai do jogo
-                exit()
-
-            # vamos realizar o click em todos os objetos
-            elif event.type == pg.MOUSEBUTTONDOWN: 
-                for i in Objetos.values():
-                    if i.visible and state == i.state:
-                        if i.Make_Click(event.pos, event.button):
-                            break
-
-            elif event.type == pg.MOUSEMOTION: # Ao passar no Mouse
-                backEvent = True
-                for i in Objetos.values():
-                    if i.visible and state == i.state:
-                        if i.Make_Motion(event.pos):
-                            backEvent = False
-                            break
-                if backEvent:
-                    MouseMoveFundo()
-
-            else:
-                # print(event)
-                pass
+        #verifica os eventos, como click, on mousemove ...
+        EventsAnswer() 
 
 
 
@@ -610,8 +660,39 @@ def start():
                     text = font.render(obj.caption,True,obj.color_font)
                     screen.blit(text, (obj.left , obj.top ))
 
+        ####################################
+        # desenhar o navio seguind o mouse #
+        ####################################
+        if (MapaConst['Desenha_Navio'] > 0): #### PRINCIPAL VARIAVEL POR CONTROLAR O DESENHO
+            mouse_pos = pg.mouse.get_pos()
+            # se o mouse estiver dentro das posicoes
+            if (MapaConst['borda'] < mouse_pos[0] < width - MapaConst['borda']) and (MapaConst['borda_top'] < mouse_pos[1]  < heigth - MapaConst['borda_button']):           
+                    btt_width =  MapaConst['btt_width']
+                    btt_height =  MapaConst['btt_height']
+                    # adequa o rect ao tamanho do navio
+                    if MapaConst['navio_orientacao']:
+                        btt_width *= MapaConst['Desenha_Navio']
+                    else:
+                        btt_height *= MapaConst['Desenha_Navio']
+
+                    # centralizar o navio do mouse na primeira celular
+                    center_one = (MapaConst['btt_width'] // 2,  MapaConst['btt_height'] // 2)
+
+                    pg.draw.rect(screen, GetPlayer().cor_navio , (mouse_pos[0] - center_one[0],
+                                                    mouse_pos[1] - center_one[1], 
+                                                    btt_width  ,
+                                                    btt_height  ))
+                                                    
+            
+               
+
         pg.display.flip()
 
+
+#inicializa algumas variavei
+MapaConst = {}
+TEXTO_KEYBOARD = ''
+state = 1 # cada componente tem um estado, se o estado for igual, então desenha
 
 
 if __name__ == '__main__':
@@ -632,6 +713,8 @@ if __name__ == '__main__':
 # uma posicao pode ter uma super bomba
 # ganhar mais um tiro
 # aleatoriamente as vezes pode cair uma bomba
+# fica uma partida sem jogar
+
 
 
 

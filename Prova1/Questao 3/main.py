@@ -8,6 +8,8 @@ clwhite = (255,255,255)
 clred = (255,0,0)
 cltransparent = (-1,-1,-1)
 clbtnface =  (236, 233, 216)
+clOcean = (51,255,255)
+clOcean = (255,255,255)
 # variavel para guardar todos os objetos
 Objetos = {}
 TEXTO_KEYBOARD = None
@@ -45,7 +47,6 @@ class Tcontrol():
         self.state = 0
         Objetos[nome] = self
         
-
 class Trect():
     """
         Interface responsavel por guardar as dimensoes dos objetos
@@ -65,7 +66,6 @@ class Trect():
         return self.width,self.heigth
     def Inside(self,pos):
         return (self.left  < pos[0] < self.left+self.width) and (self.top < pos[1] < self.heigth+self.top)
-
 
 class TEvent():
     """
@@ -88,6 +88,7 @@ class TEvent():
             self.OnMouseMove(self)
             return True
         return False
+
 
 
 # Vamos criar as Classes finais:
@@ -113,18 +114,19 @@ class Tlabel( Tcontrol,Trect, TEvent):
         self.SetRect( pos[0],pos[1],0,0)
 
 
-
-
-
-###################################################
-
-
-
-def SetCursor(cr_arrow = False, cr_hand = False):
+def SetCursor(cr_arrow = False, cr_hand = False, cr_no = False, cr_ibeam = False, cr_CROSSHAIR = False):
     if cr_arrow:
         pg.mouse.set_cursor(pg.cursors.Cursor(pg.SYSTEM_CURSOR_ARROW))
     elif cr_hand:
         pg.mouse.set_cursor(pg.cursors.Cursor(pg.SYSTEM_CURSOR_HAND))
+    elif cr_no:
+        pg.mouse.set_cursor(pg.cursors.Cursor(pg.SYSTEM_CURSOR_NO ))
+    elif cr_ibeam:    
+        pg.mouse.set_cursor(pg.cursors.Cursor(pg.SYSTEM_CURSOR_IBEAM))
+    elif cr_CROSSHAIR:    
+        pg.mouse.set_cursor(pg.cursors.Cursor(pg.SYSTEM_CURSOR_CROSSHAIR))
+
+        
 
 
 def FormKeyUP( evento ):    
@@ -184,6 +186,16 @@ class TPlayer():
         MapaConst['Form_color'] = self.cor
         Objetos['label_player'].caption = 'Jogador: '+str(self.index)
 
+    def len_Navios(self,dimensao):
+        """
+            Conta a quantidade de navios do jogador, dada a dimensao
+        """
+        resultado = 0
+        for ship in self.navios:
+            if len(ship.Posicoes) == dimensao:
+                resultado+=1
+        return resultado
+
 # Armazenar as informacoes de navio da Celula
 
 class TNavio():
@@ -198,6 +210,17 @@ class TNavio():
     def Show_navio(self):
         for cell in self.Posicoes:
             cell.color = self.player.cor_navio
+
+    def RemoveNavio(self):
+        # tira da lista dos usuarios
+        if self in self.player.navios:
+            self.player.navios.remove(self)
+        # limpa as celulas
+        for cell in self.Posicoes:
+            cell.kind = None
+            cell.color = clOcean
+
+        print(len(self.player.navios))
 
 """ ###########################################################################################
     #                                                                                         #
@@ -277,6 +300,7 @@ def SelecionaRegioes():
                    
 
 def ColocarNavio(self, dimensao, Horiontal):
+    global MapaConst
     """
         FUNCAO PARA INSERIR UM NAVIO
     """
@@ -312,13 +336,17 @@ def ColocarNavio(self, dimensao, Horiontal):
     Novo_Navio = TNavio(player.index,elementos)
     #mostra para o usuario
     Novo_Navio.Show_navio()
+    MapaConst['Desenha_Navio'] = -1
 
-    # vamos colocar ele em cada celula
-    # GetPlayer().
-    # print(elementos)
-
-
-
+def RemoverNavio(self):
+    global MapaConst
+    """
+        FUNCAO PARA REMOVER UM NAVIO
+    """
+    if self.kind == None:
+        print("Não há navio aqui!")
+        return
+    self.kind.RemoveNavio()
 
 
 
@@ -339,8 +367,19 @@ def GetPlayer( indice = -1):
     return None
 
 
+def AddNavios_UpdateColor():
+    # listar todos os botoes
+    global MapaConst,Objetos
 
-
+    player = GetPlayer()
+    for obj in Objetos.values():
+        if hasattr(obj, 'dimensao'):
+            if player.len_Navios(obj.dimensao) > MapaConst['navio_limites'][obj.dimensao]:
+                obj.color = (155,155,155)
+            else:
+                obj.color = clwhite
+            
+    
 """ ###########################################################################################
     #                                                                                         #
     #                              FUNCOES ONCLICK DOS OBJETOS                                #
@@ -355,6 +394,7 @@ def btt_next_player_click(self,mouse_button):
     global MapaConst
     MapaConst['choice_player'] += 1
     MapaConst['navio_orientacao']=True
+    MapaConst['navio_remove'] = False
 
     if MapaConst['choice_player'] > MapaConst['Num_players']:
         print("VAMOS INICIAR O JOGO")
@@ -363,7 +403,7 @@ def btt_next_player_click(self,mouse_button):
         GetPlayer().SetStatus() # atualiza o status do jogo para o proximo jogador
 
     MapaConst['Desenha_Navio'] = -1
-
+    AddNavios_UpdateColor()
     
     
 
@@ -374,8 +414,12 @@ def btt_muda_orientacao_click(self,mouse_button):
     # orientacao vai ser salva na funcao mapa_const
     global MapaConst
     MapaConst['navio_orientacao'] = not MapaConst['navio_orientacao']
+    MapaConst['navio_remove'] = False
     
-
+def btt_remove_ship_click(self,mouse_button):
+    global MapaConst
+    MapaConst['navio_remove'] = not MapaConst['navio_remove']
+    MapaConst['Desenha_Navio'] = -1
 
 def btt_navio_click(self,mouse_button):
     """
@@ -383,8 +427,22 @@ def btt_navio_click(self,mouse_button):
 
         guardar o estado de desenhar em uma variavel
     """
-    global MapaConst
+    global MapaConst    
+    # verificar quantos navios esse jogador já tem
+    ##########################################################################################################################################################################################################################################################################################
+    #'navio_limites':[0,1,2,2,2,0]
+    
+    if  GetPlayer().len_Navios(self.dimensao) > MapaConst['navio_limites'][self.dimensao]:
+        print("Você não pode inserir mais navios dessa dimensao")
+        return
+    
     MapaConst['Desenha_Navio'] = self.dimensao # variavel que permite desenhar o navio no mouse
+    MapaConst['navio_remove'] = False
+
+
+
+
+
 
     # MapaConst['navio_orientacao']
     pass
@@ -399,9 +457,12 @@ def ClickOcean(self,mouse_button):
         
         if MapaConst['Desenha_Navio'] > 0:
             ColocarNavio(self, MapaConst['Desenha_Navio'], MapaConst['navio_orientacao'])
+        elif  MapaConst['navio_remove']:
+            RemoverNavio(self)
             
-
+        AddNavios_UpdateColor()
     elif (mouse_button == 2): # clicou com o botao direito
+
         pass
 
 
@@ -416,6 +477,7 @@ def btt_play_Click(self,mouse_button):
     MapaConst['choice_player'] = 1 # jogador 1 começa escolhendo a regiao do mapa
     ChangeSpaceVisibility(MapaConst['choice_player'])
     MapaConst['navio_orientacao'] = True
+    MapaConst['navio_remove'] = False
 
     # Criar os jogadores
     jogadores_qtd =  MapaConst['Num_players']
@@ -453,7 +515,15 @@ def MouseMoveFundo( ):
     Objetos['btt_play'].color = clwhite
     Objetos['Next_player'].color = clwhite
     Objetos['change_orientation'].color = clwhite
+    Objetos['btt_Remove_ship'].color = clwhite
 
+
+
+def Button_OCEAN_move(self):
+    if MapaConst['navio_remove']:
+        SetCursor(cr_no=True) 
+    elif MapaConst['Desenha_Navio'] > 0:
+        SetCursor(cr_hand=True)
 
 
 def CriaObjetos():
@@ -477,7 +547,7 @@ def CriaObjetos():
     btt_next_player.state = 2 # cada tela tem um state
 
     # botoes de navios
-    navios = [2,3,3,4]
+    navios = [2,3,4]
     for indice, navio in enumerate(navios):
         btt_nav = TButton('Navio.'+str(indice)+'.'+str(navio))
 
@@ -493,15 +563,21 @@ def CriaObjetos():
         btt_nav.state = 2 # cada tela tem um state
         btt_nav.ref = [] # variavel responsavel por armazenar as posicoes dos navios
 
-    
-
-    ## BOTAO PARA MUDAR A ORIENTAÇÃO DE COLOCAR O NAVIO
+ 
     btt_muda_orientacao = TButton('change_orientation')
-    btt_muda_orientacao.SetRect( MapaConst['borda'], heigth - MapaConst['borda_button']+10, 200, 30)
+    btt_muda_orientacao.SetRect( MapaConst['borda'],MapaConst['borda_top']-70, 200, 20)
     btt_muda_orientacao.caption = 'Mudar a orientacao'
     btt_muda_orientacao.OnClick =  btt_muda_orientacao_click # dispara esse evento quando clicar no botao
     btt_muda_orientacao.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
     btt_muda_orientacao.state = 2 # cada tela tem um state
+
+    btt_Remove_ship = TButton('btt_Remove_ship')
+    #btt_Remove_ship.SetRect( width - MapaConst['borda']-200,MapaConst['borda_top']-70, 200, 20)
+    btt_Remove_ship.SetRect( MapaConst['borda']+210,MapaConst['borda_top']-70, 200, 20)
+    btt_Remove_ship.caption = 'Remover Navios'
+    btt_Remove_ship.OnClick =  btt_remove_ship_click # dispara esse evento quando clicar no botao
+    btt_Remove_ship.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    btt_Remove_ship.state = 2 # cada tela tem um state
 
 
     # label jogador
@@ -525,10 +601,12 @@ def CriaObjetos():
                 btt_new_space.x = x
                 btt_new_space.y = y
                 btt_new_space.OnClick = ClickOcean
+                btt_new_space.OnMouseMove = Button_OCEAN_move
                 btt_new_space.usado = False
                 btt_new_space.state = 2 # controla o desenho do componente, so quando o state global for igual
                 btt_new_space.choice_player = 0 # essa propriedade vai permitir que os jogadores coloquem o navio
                 btt_new_space.kind = None # tipo de elemento que tem na celula, pode ser um Tnavio ou ...
+                btt_new_space.color = clOcean
 
 
 def EventsAnswer():
@@ -608,9 +686,13 @@ def start():
         'Num_players':2,
         'Desenha_Navio': -1, # tamanho do navio
         'navio_orientacao': True, # horizontal ou vertical
+        'navio_remove': False,
 
         'jogadores': [],  # armazenar todos os jogadores
-        'Form_color': clwhite
+        'Form_color': clwhite,
+
+        'navio_limites':[0,0,1,2,2,0], # limitess de navios por jogador
+
     }
 
 
@@ -628,16 +710,7 @@ def start():
     #                                 Interface Gráfica                                       #
     #                                                                                         #
     ###########################################################################################
-    
-    while True:
-        # preenche a tela
-        screen.fill(MapaConst['Form_color'])  
-
-        #verifica os eventos, como click, on mousemove ...
-        EventsAnswer() 
-
-
-
+    def DrawElements():
         #Desenha os objetos
         for obj in Objetos.values():
             if (obj.visible) and state == obj.state:
@@ -660,6 +733,7 @@ def start():
                     text = font.render(obj.caption,True,obj.color_font)
                     screen.blit(text, (obj.left , obj.top ))
 
+    def DrawDinamicShip():
         ####################################
         # desenhar o navio seguind o mouse #
         ####################################
@@ -683,8 +757,17 @@ def start():
                                                     btt_width  ,
                                                     btt_height  ))
                                                     
-            
-               
+
+    while True:
+        # preenche a tela
+        screen.fill(MapaConst['Form_color'])  
+
+        #verifica os eventos: Onclick, Onmousemove, ...
+        EventsAnswer() 
+        # desenha todos os objetos
+        DrawElements()
+        #  desenhar o navio seguind o mouse
+        DrawDinamicShip()
 
         pg.display.flip()
 
@@ -714,6 +797,7 @@ if __name__ == '__main__':
 # ganhar mais um tiro
 # aleatoriamente as vezes pode cair uma bomba
 # fica uma partida sem jogar
+# achou um navio
 
 
 

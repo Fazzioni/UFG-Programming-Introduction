@@ -9,7 +9,7 @@ clred = (255,0,0)
 cltransparent = (-1,-1,-1)
 clbtnface =  (236, 233, 216)
 clOcean = (51,255,255)
-clOcean = (255,255,255)
+# clOcean = (255,255,255)
 # variavel para guardar todos os objetos
 Objetos = {}
 TEXTO_KEYBOARD = None
@@ -185,6 +185,8 @@ class TPlayer():
     def SetStatus(self):
         MapaConst['Form_color'] = self.cor
         Objetos['label_player'].caption = 'Jogador: '+str(self.index)
+        Objetos['label_before_ship_player'].caption =  "O jogador "+str(self.index)+" Vai escolher suas posições!"
+
 
     def len_Navios(self,dimensao):
         """
@@ -196,16 +198,33 @@ class TPlayer():
                 resultado+=1
         return resultado
 
+    def IsLost(self):
+        for ship in self.navios:
+            if not ship.destruido:
+                return False
+        return True
+    
+    def CheckAllNavios(self):
+        for indice,n in enumerate(MapaConst['navio_limites']):
+            if self.len_Navios(indice) < n:
+                return False
+        return True
+
+
 # Armazenar as informacoes de navio da Celula
 
 class TNavio():
+    
     def __init__(self, indice_player, _posicoes):        
         self.Posicoes = _posicoes
         self.player = GetPlayer(indice_player)
         self.player.navios.append(self)
+        self.destruido = False
         # marcar os elementos para fazerem referencia a esse navio
         for el in self.Posicoes:
             el.kind = self
+
+        self.destruido_pos = [(0,0),(0,0)]
 
     def Show_navio(self):
         for cell in self.Posicoes:
@@ -219,8 +238,24 @@ class TNavio():
         for cell in self.Posicoes:
             cell.kind = None
             cell.color = clOcean
+    
+    def IsDestruido(self):
+        for el in self.Posicoes:
+            if not el.jogado:
+                return False
+        self.destruido = True
+        self.CalculaPosicaoDraw()
+        return True
+    
+    def CalculaPosicaoDraw(self):
+            inicio = [self.Posicoes[ 0].left + (self.Posicoes[ 0].width // 2), self.Posicoes[ 0].top+(self.Posicoes[ 0].heigth // 2)]
+            fim =    [self.Posicoes[-1].left + (self.Posicoes[-1].width // 2), self.Posicoes[-1].top+(self.Posicoes[-1].heigth // 2)]
+            self.destruido_pos = [inicio, fim ]
 
-        print(len(self.player.navios))
+
+
+
+        
 
 """ ###########################################################################################
     #                                                                                         #
@@ -348,8 +383,6 @@ def RemoverNavio(self):
         return
     self.kind.RemoveNavio()
 
-
-
 def GetPlayer( indice = -1):
     """
         Funcao que retorna o jogador atual
@@ -366,7 +399,6 @@ def GetPlayer( indice = -1):
 
     return None
 
-
 def AddNavios_UpdateColor():
     # listar todos os botoes
     global MapaConst,Objetos
@@ -378,8 +410,98 @@ def AddNavios_UpdateColor():
                 obj.color = (155,155,155)
             else:
                 obj.color = clwhite
-            
+
+
+######################################################################################################################################################################################
+#                             START                               #
+######################################################################################################################################################################################
+
+def EndGame():
+    print("TERMINOU O JOGO")
+    MapaConst['End_Game'] = True
+
+    # mostra os navios escondidos
+    for cell in GetAllSpaces():
+        if cell.kind != None:
+            if isinstance(cell.kind, TNavio):
+                cell.kind.Show_navio()
     
+    Objetos['btt_new_game'].visible = True
+    # quem ganhou?
+
+
+def isFinishGame():
+    global MapaConst
+    qtd = 0
+    for jogador in MapaConst['jogadores']:
+        if not jogador.IsLost():
+            qtd +=1
+    return qtd == 1
+
+def GetNextPlayer():
+    global MapaConst
+    MapaConst['choice_player'] += 1
+    if MapaConst['choice_player'] > MapaConst['Num_players']:
+        MapaConst['choice_player'] = 1
+    if GetPlayer().IsLost():
+        if isFinishGame():
+            EndGame()
+            return False
+        else:
+            GetNextPlayer()
+
+    return True
+
+
+def ProximaJogada( self):
+    global MapaConst
+    # verificar se terminou o jogo
+
+    if self.jogado:
+        print("Ei, sem lances repetidos, tente outro local!")
+        return
+
+    self.jogado = True
+    if self.kind == None:
+        self.color = clwhite
+
+    elif isinstance(self.kind, TNavio):
+        self.color = self.kind.player.cor_navio
+        # verificar se ele esta destruido
+        if self.kind.IsDestruido():
+            MapaConst['Navios_destruidos'].append(self.kind)
+            print("Você destriu um Navio, parabens!")
+
+    if GetNextPlayer():
+        GetPlayer().SetStatus()
+     
+
+
+def StartGame():
+
+    global state,MapaConst, Objetos
+    state = 10 # carregando
+
+
+    MapaConst['Navios_destruidos'] =  [] # navios destruidos
+    MapaConst['End_Game'] = False
+    Objetos['btt_new_game'].visible = False
+
+    # começa pelo jogador 1
+    MapaConst['choice_player'] = 1
+    
+    GetPlayer(1).SetStatus()
+
+    # limpar todas as posicoes
+    for cell in GetAllSpaces():
+        cell.color = clOcean
+        cell.visible = True
+        cell.jogado = False
+        
+
+    state = 4
+    
+
 """ ###########################################################################################
     #                                                                                         #
     #                              FUNCOES ONCLICK DOS OBJETOS                                #
@@ -387,21 +509,34 @@ def AddNavios_UpdateColor():
     ###########################################################################################"""
 
 
+
 def btt_next_player_click(self,mouse_button):
+    global state,MapaConst
+    
+
     """
         Funcao para o proximo jogador escolher as posicoes dos navios
     """ 
-    global MapaConst
+    
+    ## Verificar se preencheu todos os navios
+    if not GetPlayer().CheckAllNavios():
+        print("Falta colocar alguns navios na guerra!")
+        return
+
+    state = 3
+
     MapaConst['choice_player'] += 1
     MapaConst['navio_orientacao']=True
     MapaConst['navio_remove'] = False
 
     if MapaConst['choice_player'] > MapaConst['Num_players']:
-        print("VAMOS INICIAR O JOGO")
+        state = 2
+        StartGame()
     else:
+        state = 3
         ChangeSpaceVisibility(MapaConst['choice_player'])
         GetPlayer().SetStatus() # atualiza o status do jogo para o proximo jogador
-
+    
     MapaConst['Desenha_Navio'] = -1
     AddNavios_UpdateColor()
     
@@ -447,29 +582,32 @@ def btt_navio_click(self,mouse_button):
     # MapaConst['navio_orientacao']
     pass
 
-
 def ClickOcean(self,mouse_button):
     """
         EVENTO AO CLICAR NUMA POSICAO DO OCEANO
     """
-    global MapaConst
-    if (mouse_button == 1): # clicou com o botao esquerdo
-        
-        if MapaConst['Desenha_Navio'] > 0:
-            ColocarNavio(self, MapaConst['Desenha_Navio'], MapaConst['navio_orientacao'])
-        elif  MapaConst['navio_remove']:
-            RemoverNavio(self)
+    global MapaConst,state
+    if state == 2 : # modo de escolher a posicao dos navios
+        if (mouse_button == 1): # clicou com o botao esquerdo
             
-        AddNavios_UpdateColor()
-    elif (mouse_button == 2): # clicou com o botao direito
-
-        pass
+            if MapaConst['Desenha_Navio'] > 0:
+                ColocarNavio(self, MapaConst['Desenha_Navio'], MapaConst['navio_orientacao'])
+            elif  MapaConst['navio_remove']:
+                RemoverNavio(self)
+                
+            AddNavios_UpdateColor()
+        elif (mouse_button == 2): # clicou com o botao direito
+            pass
+    elif (state == 4) and (not MapaConst['End_Game']): # se estiver no modo de jogo
+        if mouse_button == 1:
+            ProximaJogada(self)
+        
 
 
 def btt_play_Click(self,mouse_button):
     global state, MapaConst
 
-    state = 2
+    state = 3
     # seleciona os espacos possiveis para cada jogador
     SelecionaRegioes()
 
@@ -494,8 +632,30 @@ def btt_play_Click(self,mouse_button):
     
     GetPlayer().SetStatus()
 
+def btt_before_ship_continue_Click(self,mouse_button):
+    global state
+    state = 2
 
 
+def btt_new_gameClick(self,mouse_pos):
+    global state,MapaConst
+    state = 1
+
+
+    # limpa as celulas
+    for btt_new_space in GetAllSpaces():
+        btt_new_space.usado = False
+        btt_new_space.choice_player = 0 # essa propriedade vai permitir que os jogadores coloquem o navio
+        btt_new_space.kind = None # tipo de elemento que tem na celula, pode ser um Tnavio ou ...
+        btt_new_space.color = clOcean
+    
+    MapaConst['jogadores'] = []
+    MapaConst['Navios_destruidos'] = []
+
+    
+
+
+    pass
 
 """ ###########################################################################################
     #                                         ON MOVE                                         #
@@ -516,14 +676,21 @@ def MouseMoveFundo( ):
     Objetos['Next_player'].color = clwhite
     Objetos['change_orientation'].color = clwhite
     Objetos['btt_Remove_ship'].color = clwhite
-
+    Objetos['btt_before_ship_continue'].color = clwhite
+    Objetos['btt_new_game'].color = clwhite
 
 
 def Button_OCEAN_move(self):
-    if MapaConst['navio_remove']:
-        SetCursor(cr_no=True) 
-    elif MapaConst['Desenha_Navio'] > 0:
-        SetCursor(cr_hand=True)
+    global state
+    if state == 4:
+        if not self.jogado:
+            SetCursor(cr_CROSSHAIR=True)
+
+    else:
+        if MapaConst['navio_remove']:
+            SetCursor(cr_no=True) 
+        elif MapaConst['Desenha_Navio'] > 0:
+            SetCursor(cr_hand=True)
 
 
 def CriaObjetos():
@@ -539,6 +706,9 @@ def CriaObjetos():
     btt_play.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
     btt_play.state = 1 # cada tela tem um state
 
+    ###############
+    ### STATE 2 ###
+    ###############
     btt_next_player = TButton('Next_player')
     btt_next_player.SetRect( width - MapaConst['borda'] - 200, heigth - MapaConst['borda_button']+10, 200, 30)
     btt_next_player.caption = 'Proximo Jogador'
@@ -583,7 +753,7 @@ def CriaObjetos():
     # label jogador
     label_player = Tlabel('label_player',"Jogador: ",(MapaConst['borda'], 10 ))
     label_player.color_font = clblack
-    label_player.state = 2
+    label_player.state = 2,4
 
 
  
@@ -597,17 +767,61 @@ def CriaObjetos():
                                        MapaConst['borda_top'] + MapaConst['btt_height']*y,
                                        MapaConst['btt_width'], MapaConst['btt_height']
                                        )
-                btt_new_space.caption = str(x)
+                btt_new_space.caption = '.'
                 btt_new_space.x = x
                 btt_new_space.y = y
                 btt_new_space.OnClick = ClickOcean
                 btt_new_space.OnMouseMove = Button_OCEAN_move
                 btt_new_space.usado = False
-                btt_new_space.state = 2 # controla o desenho do componente, so quando o state global for igual
+                btt_new_space.state = 2,4 # controla o desenho do componente, so quando o state global for igual
                 btt_new_space.choice_player = 0 # essa propriedade vai permitir que os jogadores coloquem o navio
                 btt_new_space.kind = None # tipo de elemento que tem na celula, pode ser um Tnavio ou ...
                 btt_new_space.color = clOcean
 
+    #################
+    #### STATE 3 #### intervalo entre state 2
+    #################
+    # label ATENCAO
+    label_before_ship = Tlabel('label_before_ship',"ATENCAO, A PROXIMA TELA CONTEM SPOILER!!!",(MapaConst['borda'], 30 ))
+    label_before_ship.color_font = clblack
+    label_before_ship.state = 3
+    
+    label_before_ship_player = Tlabel('label_before_ship_player',"Dinamic",(MapaConst['borda'], 60 ))
+    label_before_ship_player.color_font = clblack
+    label_before_ship_player.state = 3
+    
+    
+    
+
+
+    # btt CONTINUE
+    btt_before_ship_continue = TButton('btt_before_ship_continue')
+    btt_before_ship_continue.SetRect( width - MapaConst['borda'] - 200, heigth - MapaConst['borda_button']+10, 200, 30)
+    btt_before_ship_continue.caption = 'Continuar'
+    btt_before_ship_continue.OnClick =  btt_before_ship_continue_Click # dispara esse evento quando clicar no botao
+    btt_before_ship_continue.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    btt_before_ship_continue.state = 3 # cada tela tem um state
+
+    
+
+    #################
+    #### STATE4  #### Jogo
+    #################
+    btt_new_game = TButton('btt_new_game')
+    btt_new_game.SetRect( width - MapaConst['borda'] - 200, heigth - MapaConst['borda_button']+10, 200, 30)
+    btt_new_game.caption = 'Novo jogo'
+    btt_new_game.OnClick =  btt_new_gameClick # dispara esse evento quando clicar no botao
+    btt_new_game.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    btt_new_game.state = 4 # cada tela tem um state
+
+
+
+def VerifySate(compare_state):
+    global state
+    if (isinstance(compare_state,int)):
+        return compare_state == state
+    else:
+        return state in compare_state
 
 def EventsAnswer():
     """
@@ -623,14 +837,14 @@ def EventsAnswer():
         # vamos realizar o click em todos os objetos
         elif event.type == pg.MOUSEBUTTONDOWN: 
             for i in Objetos.values():
-                if i.visible and state == i.state:
+                if i.visible and VerifySate(i.state):
                     if i.Make_Click(event.pos, event.button):
                         break
 
         elif event.type == pg.MOUSEMOTION: # Ao passar no Mouse
             backEvent = True
             for i in Objetos.values():
-                if i.visible and state == i.state:
+                if i.visible and VerifySate(i.state):
                     if i.Make_Motion(event.pos):
                         backEvent = False
                         break
@@ -683,7 +897,7 @@ def start():
         'colunas': 20, # quantidade de letras nas colunas
         'linhas' : 20, # quantidade de letras nas linhas
 
-        'Num_players':2,
+        'Num_players':3,
         'Desenha_Navio': -1, # tamanho do navio
         'navio_orientacao': True, # horizontal ou vertical
         'navio_remove': False,
@@ -692,7 +906,9 @@ def start():
         'Form_color': clwhite,
 
         'navio_limites':[0,0,1,2,2,0], # limitess de navios por jogador
+        'Navios_destruidos': [], # navios destruidos
 
+        'End_Game':False
     }
 
 
@@ -702,7 +918,7 @@ def start():
 
     # constroi os objetos
     CriaObjetos()     
-    btt_play_Click(None,None)
+    #btt_play_Click(None,None)
 
 
     ###########################################################################################
@@ -710,11 +926,13 @@ def start():
     #                                 Interface Gráfica                                       #
     #                                                                                         #
     ###########################################################################################
+
+
     def DrawElements():
         #Desenha os objetos
         for obj in Objetos.values():
-            if (obj.visible) and state == obj.state:
-
+            
+            if (obj.visible) and (VerifySate(obj.state)):
                 # Desenha os botoes
                 if isinstance(obj,TButton):
                     #background
@@ -757,6 +975,11 @@ def start():
                                                     btt_width  ,
                                                     btt_height  ))
                                                     
+    def DrawNavioDestruido():
+        for navios in MapaConst['Navios_destruidos']:
+            pg.draw.line(screen, clblack, navios.destruido_pos[0], navios.destruido_pos[1], 5)
+
+             
 
     while True:
         # preenche a tela
@@ -769,6 +992,7 @@ def start():
         #  desenhar o navio seguind o mouse
         DrawDinamicShip()
 
+        DrawNavioDestruido()
         pg.display.flip()
 
 
@@ -776,6 +1000,12 @@ def start():
 MapaConst = {}
 TEXTO_KEYBOARD = ''
 state = 1 # cada componente tem um estado, se o estado for igual, então desenha
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
@@ -813,4 +1043,5 @@ if __name__ == '__main__':
 # -> btt_play_click
 
 # -> btt_next_player
+
 

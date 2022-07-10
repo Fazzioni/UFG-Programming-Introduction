@@ -23,6 +23,10 @@ MapaConst = {
          'navio_remove': False,
 
         'navio_limites':[0,0,1,2,2,0]
+
+        'Navios_destruidos': []
+
+        'End_Game':False 
     }
 
 ___________________________________________________________________________________________

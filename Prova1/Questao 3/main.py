@@ -181,6 +181,8 @@ def MouseMoveFundo( ):
     """
     SetCursor(cr_arrow=True)
     Objetos['btt_play'].color = clwhite
+    Objetos['Next_player'].color = clwhite
+    
 
     #Objetos['btt_Sufle'].color = clwhite    
     
@@ -323,20 +325,79 @@ def LimpaNavio():
     """
     pass
 
-    
+def GetAllSpaces():
+    global Objetos
+    """
+        Essa funcao retorna todos os quadrados do jogo
+    """
+    for obj in Objetos.values():
+        if hasattr(obj,'x') and hasattr(obj,'y'): # verifica se o objeto tem atributo x e y
+            yield obj
+        
+
+def GetEspace(x,y):
+    global Objetos
+    return Objetos[str(x)+'.'+str(y) ]
+
+def ChangeSpaceVisibility(player):
+    """
+         muda a visibilidade dos objetos pro jogador escolher a posicao para colocar o navio
+    """
+    for i in GetAllSpaces():
+        i.visible = (i.choice_player == player)
+
+
+
 def SelecionaRegioes():
+    global MapaConst
     """
         Essa funcao retorna os possiveis quadrados para os jogadores escolherem
     """
     "-> cada item sorteado pode trazer 4 lugares"
     # se os valores totais sao multiplos de 4
-    # de quantas formas podemos sortear 8 quadrantes de 16?
+    # de quantas formas podemos sortear 8 quadrantes de 16? o tempo exige outra abordagem:
+    # 1- listar todos os quadrardos  4x4 disponiveis 
+
+    # dividimos o mapa em blocos de 16 elementos
+    qtd = MapaConst['colunas'] // 4, MapaConst['linhas']// 4
+
+    combinacoes = []
+    for x in range(qtd[0]):
+        for y in range(qtd[1]):
+            # adiciona todos os conjuntos diponiveis pro jogador colocar o navio
+            combinacoes.append( (x,y) )
     
+    # escolhe as combinacoes os jogadores
 
-    
+    for player in range(1,MapaConst['Num_players']+1): # EU PODERIA FAZER O JOGO COM 3 OU MAIS JOGADORES
+
+        for jogador in range(5): # para cada jogador escolhe 4 posicoes no mapa para permitir que ele coloque o navio
+            lugar = random.choice(combinacoes)
+            combinacoes.remove(lugar)
+
+            # marca o lugar nos objetos
+            for x in range(4):
+                for y in range(4):
+                    GetEspace((lugar[0]*4)+x, (lugar[1]*4)+y).choice_player = player
+                   
+
+            
+def btt_next_player_click(self,mouse_button):
+    """
+        Funcao para o proximo jogador escolher as posicoes dos navios
+    """ 
+    global MapaConst
+    MapaConst['choice_player'] += 1
+
+    if MapaConst['choice_player'] > MapaConst['Num_players']:
+        print("VAMOS INICIAR O JOGO")
+    else:
+        ChangeSpaceVisibility(MapaConst['choice_player'])
 
 
 
+def btt_navio_click():
+    pass
 
 MapaConst = {}
 
@@ -344,7 +405,18 @@ TEXTO_KEYBOARD = ''
 
 state = 1 # cada componente tem um estado, se o estado for igual, então desenha
 
+def OnBeforeStart():
+    global state, MapaConst
+    
+    state = 2
+    # seleciona os espacos possiveis para cada jogador
+    SelecionaRegioes()
 
+    
+    MapaConst['choice_player'] = 1 # jogador 1 começa escolhendo a regiao do mapa
+    ChangeSpaceVisibility(MapaConst['choice_player'])
+
+    
 def start():
     global state
     ## VAMOS CRIAR UM BATALHA NAVAL MAIS DIVERTIDO? ##
@@ -379,6 +451,8 @@ def start():
 
         'colunas': 20, # quantidade de letras nas colunas
         'linhas' : 20, # quantidade de letras nas linhas
+
+        'Num_players':2
     }
 
 
@@ -420,6 +494,34 @@ def start():
     btt_play.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
     btt_play.state = 1 # cada tela tem um state
 
+    btt_next_player = TButton('Next_player')
+    btt_next_player.SetRect( width - MapaConst['borda'] - 200, heigth - MapaConst['borda_button']+10, 200, 30)
+    btt_next_player.caption = 'Proximo Jogador'
+    btt_next_player.OnClick =  btt_next_player_click # dispara esse evento quando clicar no botao
+    btt_next_player.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    btt_next_player.state = 2 # cada tela tem um state
+
+    # botoes de navios
+    navios = [2,3,3,4]
+    for indice, navio in enumerate(navios):
+        btt_nav = TButton('Navio.'+str(indice)+'.'+str(navio))
+
+        # posicionar da esquerda para direita
+        nav_width = (width  - (MapaConst['borda']*2)) // len(navios)
+
+        btt_nav.SetRect( MapaConst['borda'] + (nav_width+2)*indice , 10, nav_width, 30)
+
+
+        btt_nav.dimensao = navio
+        btt_nav.caption = 'Navio '+str(btt_nav.dimensao)
+        btt_nav.OnClick =  btt_navio_click # dispara esse evento quando clicar no botao
+        #btt_nav.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+        btt_nav.state = 2 # cada tela tem um state
+
+
+
+
+    #btt_nav.OnClick =  btt_navio_click
 
     """
     # label, texto informativo
@@ -429,18 +531,20 @@ def start():
 
     for y in range(MapaConst['linhas']):
         for x in range(MapaConst['colunas']):
-                # cria um objeto Tbutton para cada letra
-                btt_new_letra = TButton(str(x)+'.'+str(y))
-                btt_new_letra.SetRect( MapaConst['borda'] + MapaConst['btt_width']*x,  
+                # cria um objeto Tbutton para cada space
+                btt_new_space = TButton(str(x)+'.'+str(y))
+                btt_new_space.SetRect( MapaConst['borda'] + MapaConst['btt_width']*x,  
                                        MapaConst['borda_top'] + MapaConst['btt_height']*y,
                                        MapaConst['btt_width'], MapaConst['btt_height']
                                        )
-                btt_new_letra.caption = str(x)
-                btt_new_letra.x = x
-                btt_new_letra.y = y
-                btt_new_letra.OnClick = OnClickLetra
-                btt_new_letra.usado = False
-                btt_new_letra.state = 2
+                btt_new_space.caption = str(x)
+                btt_new_space.x = x
+                btt_new_space.y = y
+                btt_new_space.OnClick = OnClickLetra
+                btt_new_space.usado = False
+                btt_new_space.state = 2 # controla o desenho do componente, so quando o state global for igual
+                btt_new_space.choice_player = 0 # essa propriedade vai permitir que os jogadores coloquem o navio
+    print("Criou todos os spaces")                
 
 
     ###########################################################################################
@@ -448,8 +552,9 @@ def start():
     #                                 Interface Gráfica                                       #
     #                                                                                         #
     ###########################################################################################
+    OnBeforeStart()
 
- 
+
 
     while True:
  
@@ -509,7 +614,6 @@ def start():
 
 
 
-state = 2
 if __name__ == '__main__':
     start()
 
@@ -527,4 +631,19 @@ if __name__ == '__main__':
 # uma posicao pode ter um rastreador
 # uma posicao pode ter uma super bomba
 # ganhar mais um tiro
+# aleatoriamente as vezes pode cair uma bomba
+
+
+
+
+#Engine do jogo
+
+# Start -> pinta o jogo
+
+
+# -> 1º state = 1
+
+# -> btt_play_click
+
+# -> btt_next_player
 

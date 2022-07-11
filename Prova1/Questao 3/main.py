@@ -624,7 +624,8 @@ def btt_play_Click(self,mouse_button):
         player = TPlayer() # cria um novo jogador
 
         player.cor = (random.randrange(255),random.randrange(255),random.randrange(255))
-        player.cor_navio = (random.randrange(255),random.randrange(255),random.randrange(255))
+        player.cor_navio = player.cor
+        #player.cor_navio = (random.randrange(255),random.randrange(255),random.randrange(255))
         
         player.index = i+1
 
@@ -657,6 +658,21 @@ def btt_new_gameClick(self,mouse_pos):
 
     pass
 
+
+def btt_player_mais_click(self,mouse_pos):
+    global MapaConst,Objetos
+    MapaConst['Num_players'] += 1
+    Objetos['label_qtd_player'].caption = 'Jogadores: '+str(MapaConst['Num_players'])
+
+def btt_player_menos_click(self,mouse_pos):
+    global MapaConst,Objetos
+    MapaConst['Num_players'] -= 1
+
+    if MapaConst['Num_players'] < 2:
+        MapaConst['Num_players'] = 2
+
+    Objetos['label_qtd_player'].caption = 'Jogadores: '+str(MapaConst['Num_players'])
+    
 """ ###########################################################################################
     #                                         ON MOVE                                         #
     ###########################################################################################"""
@@ -678,6 +694,8 @@ def MouseMoveFundo( ):
     Objetos['btt_Remove_ship'].color = clwhite
     Objetos['btt_before_ship_continue'].color = clwhite
     Objetos['btt_new_game'].color = clwhite
+    Objetos['btt_player_mais'].color = clwhite
+    Objetos['btt_player_menos'].color = clwhite
 
 
 def Button_OCEAN_move(self):
@@ -705,6 +723,27 @@ def CriaObjetos():
     btt_play.OnClick =  btt_play_Click # dispara esse evento quando clicar no botao
     btt_play.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
     btt_play.state = 1 # cada tela tem um state
+
+
+    btt_player_mais = TButton('btt_player_mais')
+    btt_player_mais.SetRect( MapaConst['borda'], heigth - MapaConst['borda_button']-50, 40, 30)
+    btt_player_mais.caption = 'Mais'
+    btt_player_mais.OnClick =  btt_player_mais_click # dispara esse evento quando clicar no botao
+    btt_player_mais.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    btt_player_mais.state = 1 
+
+    btt_player_menos = TButton('btt_player_menos')
+    btt_player_menos.SetRect( MapaConst['borda'] + 50, heigth - MapaConst['borda_button']-50, 40, 30)
+    btt_player_menos.caption = 'Menos'
+    btt_player_menos.OnClick =  btt_player_menos_click # dispara esse evento quando clicar no botao
+    btt_player_menos.OnMouseMove =  ButtonMouseMove # evento quando passa o mouse
+    btt_player_menos.state = 1 
+
+    label_qtd_player = Tlabel('label_qtd_player',"Jogadores: ",(MapaConst['borda'], heigth - MapaConst['borda_button']-67 ))
+    label_qtd_player.color_font = clblack
+    label_qtd_player.state = 1
+
+
 
     ###############
     ### STATE 2 ###
@@ -912,6 +951,7 @@ def start():
     }
 
 
+
     # calcula o tamanho dos botoes de cada letra na matriz
     MapaConst['btt_width'] =(width - (2*MapaConst['borda'])) // MapaConst['colunas']
     MapaConst['btt_height'] = (heigth - MapaConst['borda_button'] - MapaConst['borda_top']) // MapaConst['linhas']
@@ -920,6 +960,7 @@ def start():
     CriaObjetos()     
     #btt_play_Click(None,None)
 
+    Objetos['label_qtd_player'].caption = 'Jogadores: '+str(MapaConst['Num_players'])
 
     ###########################################################################################
     #                                                                                         #

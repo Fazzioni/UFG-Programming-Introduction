@@ -133,3 +133,17 @@ else:
 
 
  
+
+"""
+    Explicação:
+
+    Nesse algorítmo, infelizmente, há uma complexidade fatorial em função do número de bananas.    
+    Basicamente, o algorítmo faz todas as combinações possíveis (entre a origem, bananas, e a chegada) 
+    e busca aquela se satifaz a condição de energia.
+
+    Foi utilizado um dfs, principalmente, pq a implementação é rápida.
+    Esse é um problema elegante com uma solução incompleta devido dificuldade de ser escalável,
+    com toda certeza, cabe maiores reflexões!
+
+    Obrigado!
+"""

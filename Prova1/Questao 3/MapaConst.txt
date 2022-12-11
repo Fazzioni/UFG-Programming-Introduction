@@ -1,0 +1,49 @@
+MapaConst = {
+        'borda': 20,
+        'borda_top': 100,
+        'borda_button': 50,
+
+        'colunas': 20, # quantidade de letras nas colunas
+        'linhas' : 20, # quantidade de letras nas linhas
+
+        'Num_players':2, # quantidade de jogadores
+
+        'Desenha_Navio': -1, # tamanho do navio, habilita para iserir / remover navios
+        'navio_orientacao': True, # horizontal ou vertical
+
+        'jogadores': []  # armazenar todos os jogadores
+
+        'choice_player':  # index do jogador que vai colocar os navios
+
+        'btt_width':0,
+        'btt_height':0,
+
+        'form_color': clwhite
+
+         'navio_remove': False,
+
+        'navio_limites':[0,0,1,2,2,0]
+
+        'Navios_destruidos': []
+
+        'End_Game':False 
+    }
+
+___________________________________________________________________________________________
+atributos
+botao oceano/ celula/ space:
+    choice_player  # index do jogador que pode coloar o navio aqui
+
+    # preciso guardar o navio em todas as celulas
+    # guardar o jogador tambem ou deduzir, mas nao é bom
+
+    vamos criar um objeto KIND para guardar isso:
+    ocean_kind = [ tipo, celulas , player] 
+        # tipo:
+            1 = navio
+        # celulas:
+            referencia de todas as celulas que o navio esta alocado
+        # player:
+            indice do jogador
+    
+
